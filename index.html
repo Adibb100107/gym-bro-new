@@ -1,0 +1,1894 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Gym Bro - Adib Project (Ultimate)</title>
+
+    <!-- Manifest Placeholder untuk PWA -->
+    <link id="pwa-manifest" rel="manifest" />
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Leaflet CSS & JS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+      :root {
+        --app-bg: #030712;
+        --app-panel: rgba(15, 23, 42, 0.7);
+      }
+      body {
+        background-color: var(--app-bg);
+        color: #f3f4f6;
+        font-family: "Inter", "Segoe UI", sans-serif;
+        overflow-x: hidden;
+      }
+
+      /* Glassmorphism & Elite Styles */
+      .glass-panel {
+        background: var(--app-panel);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      }
+      .elite-input {
+        background-color: #020617;
+        border: 1px solid #1e293b;
+        color: #e2e8f0;
+        transition: all 0.3s ease;
+      }
+      .elite-input:focus {
+        outline: none;
+        border-color: #84cc16;
+        box-shadow: 0 0 0 2px rgba(132, 204, 22, 0.2);
+      }
+      .elite-label {
+        font-size: 0.65rem;
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        color: #64748b;
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+        display: block;
+      }
+
+      /* Animations */
+      @keyframes pulseGlow {
+        0%,
+        100% {
+          filter: drop-shadow(0 0 2px rgba(239, 68, 68, 0.5));
+          transform: scale(1);
+        }
+        50% {
+          filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.9));
+          transform: scale(1.1);
+          color: #ef4444;
+        }
+      }
+      .animate-pulse-heart {
+        animation: pulseGlow 1.2s infinite ease-in-out;
+      }
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-4px);
+          color: #3b82f6;
+        }
+      }
+      .animate-drop {
+        animation: float 2s infinite ease-in-out;
+      }
+
+      /* Gradients */
+      .bg-grad-green {
+        background: linear-gradient(135deg, #14532d 0%, #064e3b 100%);
+        border-color: #166534;
+      }
+      .bg-grad-purple {
+        background: linear-gradient(135deg, #4c1d95 0%, #312e81 100%);
+        border-color: #5b21b6;
+      }
+      .bg-grad-cyan {
+        background: linear-gradient(135deg, #164e63 0%, #0f172a 100%);
+        border-color: #155e75;
+      }
+      .bg-grad-gold {
+        background: linear-gradient(135deg, #78350f 0%, #451a03 100%);
+        border-color: #92400e;
+      }
+
+      #map {
+        height: 100%;
+        width: 100%;
+        border-radius: 0.75rem;
+        z-index: 1;
+      }
+      ::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #020617;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #334155;
+        border-radius: 4px;
+      }
+      .badge-icon {
+        filter: drop-shadow(0 0 5px rgba(132, 204, 22, 0.5));
+      }
+    </style>
+  </head>
+  <body class="min-h-screen flex flex-col justify-between">
+    <!-- NAVBAR -->
+    <nav
+      class="bg-[#020617]/90 backdrop-blur-xl border-b border-gray-800 px-4 md:px-6 py-4 sticky top-0 z-40"
+    >
+      <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+          <div
+            class="bg-lime-500 text-gray-950 p-2 rounded-lg font-black text-xl tracking-wider shadow-[0_0_15px_rgba(132,204,22,0.4)]"
+          >
+            GB
+          </div>
+          <div>
+            <h1
+              class="text-lg md:text-xl font-black tracking-widest uppercase text-white"
+            >
+              GYM BRO
+            </h1>
+            <p
+              class="text-[8px] md:text-[9px] text-lime-400 font-bold tracking-widest uppercase"
+            >
+              Adib Project Ultimate
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-3">
+          <!-- Install App Button (PWA) -->
+          <button
+            id="btnInstallApp"
+            class="hidden bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-1 shadow-[0_0_10px_rgba(59,130,246,0.5)] transition"
+          >
+            <i data-lucide="download" class="w-3 h-3"></i> Install
+          </button>
+          <div id="navRight" class="flex items-center space-x-3"></div>
+        </div>
+      </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-4 md:p-6 flex-grow w-full">
+      <!-- AUTH SECTION -->
+      <div
+        id="authSection"
+        class="max-w-md mx-auto my-12 glass-panel p-8 rounded-3xl"
+      >
+        <div class="flex border-b border-gray-800 mb-6">
+          <button
+            id="tabLogin"
+            onclick="switchTab('login')"
+            class="flex-1 pb-3 font-bold border-b-2 border-lime-500 text-lime-400 transition"
+          >
+            Masuk
+          </button>
+          <button
+            id="tabRegister"
+            onclick="switchTab('register')"
+            class="flex-1 pb-3 font-bold border-b-2 border-transparent text-gray-500 hover:text-white transition"
+          >
+            Daftar
+          </button>
+        </div>
+        <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-5">
+          <div>
+            <label class="elite-label">Username</label
+            ><input
+              type="text"
+              id="loginUser"
+              required
+              class="w-full elite-input rounded-xl px-4 py-3"
+            />
+          </div>
+          <div>
+            <label class="elite-label">Password</label
+            ><input
+              type="password"
+              id="loginPass"
+              required
+              class="w-full elite-input rounded-xl px-4 py-3"
+            />
+          </div>
+          <button
+            type="submit"
+            class="w-full bg-lime-500 hover:bg-lime-400 text-gray-950 font-black py-3 rounded-xl transition uppercase tracking-widest text-xs shadow-[0_0_15px_rgba(132,204,22,0.3)]"
+          >
+            Masuk
+          </button>
+          <div class="text-center mt-4">
+            <button
+              type="button"
+              onclick="openForgotModal()"
+              class="text-[10px] text-gray-500 hover:text-lime-400 font-bold uppercase tracking-widest transition"
+            >
+              Lupa Password?
+            </button>
+          </div>
+        </form>
+        <form
+          id="registerForm"
+          onsubmit="handleRegister(event)"
+          class="space-y-5 hidden"
+        >
+          <div>
+            <label class="elite-label">Nama Lengkap</label
+            ><input
+              type="text"
+              id="regName"
+              required
+              class="w-full elite-input rounded-xl px-4 py-3"
+            />
+          </div>
+          <div>
+            <label class="elite-label">Username Baru</label
+            ><input
+              type="text"
+              id="regUser"
+              required
+              class="w-full elite-input rounded-xl px-4 py-3"
+            />
+          </div>
+          <div>
+            <label class="elite-label">Password Baru</label
+            ><input
+              type="password"
+              id="regPass"
+              required
+              class="w-full elite-input rounded-xl px-4 py-3"
+            />
+          </div>
+          <button
+            type="submit"
+            class="w-full bg-lime-500 hover:bg-lime-400 text-gray-950 font-black py-3 rounded-xl transition uppercase tracking-widest text-xs"
+          >
+            Daftar
+          </button>
+        </form>
+      </div>
+
+      <!-- DASHBOARD -->
+      <div id="dashboardSection" class="hidden space-y-6">
+        <!-- Broadcast -->
+        <div
+          id="broadcastBanner"
+          class="hidden bg-blue-900/30 border border-blue-500/40 p-4 rounded-xl flex items-start gap-3"
+        >
+          <i
+            data-lucide="bell-ring"
+            class="text-blue-400 mt-0.5 animate-pulse"
+          ></i>
+          <div>
+            <h4
+              class="text-xs font-black text-blue-300 uppercase tracking-wider"
+            >
+              Pengumuman Admin
+            </h4>
+            <p id="broadcastMsg" class="text-gray-200 text-xs mt-1"></p>
+          </div>
+        </div>
+
+        <!-- MEMBER DASHBOARD -->
+        <div id="memberDashboard" class="space-y-6">
+          <!-- Header Profile -->
+          <div
+            class="glass-panel p-5 md:p-6 rounded-3xl flex flex-col md:flex-row justify-between items-center gap-5"
+          >
+            <div class="flex items-center gap-5 w-full md:w-auto">
+              <div
+                class="w-16 h-16 rounded-full border-2 border-lime-500 flex items-center justify-center bg-[#020617] relative shadow-[0_0_15px_rgba(132,204,22,0.3)]"
+              >
+                <span
+                  id="userLevelText"
+                  class="text-xl font-black text-lime-400"
+                  >1</span
+                >
+                <div
+                  class="absolute -bottom-2 bg-lime-500 text-gray-950 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest"
+                >
+                  LVL
+                </div>
+              </div>
+              <div class="flex-1">
+                <h2
+                  class="text-xl md:text-2xl font-black text-white tracking-wide"
+                  id="userGreeting"
+                >
+                  Halo, Bro!
+                </h2>
+                <div class="flex items-center gap-3 mt-1.5">
+                  <div
+                    class="w-full md:w-48 h-1.5 bg-gray-800 rounded-full overflow-hidden"
+                  >
+                    <div
+                      id="expBar"
+                      class="h-full bg-gradient-to-r from-lime-600 to-lime-400 w-0 transition-all duration-1000"
+                    ></div>
+                  </div>
+                  <span
+                    id="expText"
+                    class="text-[9px] text-gray-400 font-mono font-bold"
+                    >0/500 EXP</span
+                  >
+                </div>
+                <div id="badgesContainer" class="flex gap-2 mt-3"></div>
+              </div>
+            </div>
+            <button
+              onclick="openModalTambah()"
+              class="w-full md:w-auto bg-lime-500 hover:bg-lime-400 text-gray-950 font-black px-6 py-3.5 rounded-xl flex justify-center items-center gap-2 text-xs uppercase tracking-widest shadow-[0_0_15px_rgba(132,204,22,0.3)] transition"
+            >
+              <i data-lucide="zap" class="w-4 h-4"></i> Mulai Aktivitas
+            </button>
+          </div>
+
+          <!-- Stats -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            <div class="bg-grad-gold p-4 rounded-2xl border">
+              <div class="flex justify-between">
+                <p
+                  class="text-[8px] md:text-[9px] font-black text-gray-300 uppercase tracking-widest"
+                >
+                  Aktivitas
+                </p>
+                <i
+                  data-lucide="activity"
+                  class="w-3.5 h-3.5 text-yellow-500"
+                ></i>
+              </div>
+              <p
+                id="statTotal"
+                class="text-xl md:text-2xl font-black text-white mt-1"
+              >
+                0
+              </p>
+            </div>
+            <div class="bg-grad-green p-4 rounded-2xl border">
+              <div class="flex justify-between">
+                <p
+                  class="text-[8px] md:text-[9px] font-black text-gray-300 uppercase tracking-widest"
+                >
+                  Selesai
+                </p>
+                <i
+                  data-lucide="check-circle"
+                  class="w-3.5 h-3.5 text-green-400"
+                ></i>
+              </div>
+              <p
+                id="statCompleted"
+                class="text-xl md:text-2xl font-black text-white mt-1"
+              >
+                0
+              </p>
+            </div>
+            <div class="bg-grad-purple p-4 rounded-2xl border">
+              <div class="flex justify-between">
+                <p
+                  class="text-[8px] md:text-[9px] font-black text-gray-300 uppercase tracking-widest"
+                >
+                  Kalori
+                </p>
+                <i data-lucide="flame" class="w-3.5 h-3.5 text-orange-400"></i>
+              </div>
+              <p class="text-xl md:text-2xl font-black text-white mt-1">
+                <span id="statCals">0</span>
+              </p>
+            </div>
+            <div class="bg-grad-cyan p-4 rounded-2xl border">
+              <div class="flex justify-between">
+                <p
+                  class="text-[8px] md:text-[9px] font-black text-gray-300 uppercase tracking-widest"
+                >
+                  Jarak
+                </p>
+                <i data-lucide="map" class="w-3.5 h-3.5 text-cyan-400"></i>
+              </div>
+              <p class="text-xl md:text-2xl font-black text-white mt-1">
+                <span id="statDist">0</span
+                ><span class="text-[10px] text-gray-400 ml-1">Km</span>
+              </p>
+            </div>
+          </div>
+
+          <!-- Integrated Widgets (Spotify, Food, Water, BMI) -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Spotify Embed -->
+            <div
+              class="glass-panel rounded-2xl border flex flex-col overflow-hidden"
+            >
+              <div class="p-3 border-b border-gray-800 bg-[#020617]/50">
+                <h3
+                  class="text-[9px] font-black text-green-400 uppercase tracking-widest flex items-center gap-1.5"
+                >
+                  <i data-lucide="music" class="w-3 h-3"></i> Spotify Gym Vibes
+                </h3>
+              </div>
+              <div class="flex-grow p-0 relative min-h-[152px]">
+                <iframe
+                  style="
+                    border-radius: 0;
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                  "
+                  src="https://open.spotify.com/embed/playlist/37i9dQZF1DX76Wlfdnj7AP?utm_source=generator&theme=0"
+                  frameborder="0"
+                  allowfullscreen=""
+                  allow="
+                    autoplay;
+                    clipboard-write;
+                    encrypted-media;
+                    fullscreen;
+                    picture-in-picture;
+                  "
+                  loading="lazy"
+                ></iframe>
+              </div>
+            </div>
+
+            <!-- Water & BMI (Stacked) -->
+            <div class="flex flex-col gap-4">
+              <div
+                class="glass-panel p-4 rounded-2xl border flex-grow flex flex-col justify-center relative overflow-hidden"
+              >
+                <div
+                  class="flex justify-between items-start mb-2 relative z-10"
+                >
+                  <p
+                    class="text-[9px] font-black text-blue-300 uppercase tracking-widest"
+                  >
+                    Hidrasi
+                  </p>
+                  <i
+                    data-lucide="droplet"
+                    class="w-4 h-4 text-blue-400 animate-drop"
+                  ></i>
+                </div>
+                <div class="flex items-center justify-between relative z-10">
+                  <p class="text-2xl font-black text-white">
+                    <span id="statWater">0</span
+                    ><span class="text-xs text-gray-500">/8</span>
+                  </p>
+                  <div class="flex gap-1.5">
+                    <button
+                      onclick="addWater(-1)"
+                      class="bg-gray-800 text-white p-2 rounded-lg border border-gray-600 hover:bg-gray-700 transition"
+                    >
+                      <i data-lucide="minus" class="w-3 h-3"></i></button
+                    ><button
+                      onclick="addWater(1)"
+                      class="bg-blue-600 text-white p-2 rounded-lg border border-blue-400 hover:bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.4)] transition"
+                    >
+                      <i data-lucide="plus" class="w-3 h-3"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="glass-panel p-4 rounded-2xl border flex-grow">
+                <div class="flex justify-between items-start mb-2">
+                  <p
+                    class="text-[9px] font-black text-rose-300 uppercase tracking-widest"
+                  >
+                    Profil Fisik
+                  </p>
+                  <button
+                    onclick="openProfileModal()"
+                    class="text-[8px] bg-gray-800 text-gray-300 px-2 py-1 rounded border border-gray-600 uppercase font-bold hover:bg-gray-700"
+                  >
+                    <i data-lucide="edit" class="w-3 h-3"></i>
+                  </button>
+                </div>
+                <div class="flex gap-3 mt-1">
+                  <div>
+                    <p class="text-[8px] text-gray-500 font-bold uppercase">
+                      Berat
+                    </p>
+                    <p class="text-base font-black text-white">
+                      <span id="txtWeight">-</span>
+                    </p>
+                  </div>
+                  <div>
+                    <p class="text-[8px] text-gray-500 font-bold uppercase">
+                      Tinggi
+                    </p>
+                    <p class="text-base font-black text-white">
+                      <span id="txtHeight">-</span>
+                    </p>
+                  </div>
+                  <div class="border-l border-gray-700 pl-3">
+                    <p class="text-[8px] text-gray-500 font-bold uppercase">
+                      Status BMI
+                    </p>
+                    <p
+                      id="txtBMIStatus"
+                      class="text-xs md:text-sm font-black text-gray-400"
+                    >
+                      -
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Food Journal & 1RM (Stacked) -->
+            <div class="flex flex-col gap-4">
+              <div class="glass-panel p-4 rounded-2xl border flex-grow">
+                <div class="flex justify-between items-start mb-2">
+                  <p
+                    class="text-[9px] font-black text-orange-300 uppercase tracking-widest"
+                  >
+                    Jurnal Kalori
+                  </p>
+                  <button
+                    onclick="openFoodModal()"
+                    class="text-[8px] bg-orange-900/50 text-orange-400 px-2 py-1 rounded border border-orange-700 uppercase font-bold hover:bg-orange-800 transition"
+                  >
+                    + Food
+                  </button>
+                </div>
+                <div class="flex justify-between items-end mt-1">
+                  <div>
+                    <p class="text-[8px] text-gray-500 font-bold uppercase">
+                      In (Makan)
+                    </p>
+                    <p class="text-lg font-black text-orange-400">
+                      <span id="txtFoodIn">0</span>
+                    </p>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-[8px] text-gray-500 font-bold uppercase">
+                      Out (Latihan)
+                    </p>
+                    <p class="text-lg font-black text-lime-400">
+                      <span id="txtFoodOut">0</span>
+                    </p>
+                  </div>
+                </div>
+                <div
+                  class="w-full bg-gray-800 h-1 rounded-full mt-2 overflow-hidden flex"
+                >
+                  <div id="barFoodIn" class="bg-orange-500 h-full w-1/2"></div>
+                  <div id="barFoodOut" class="bg-lime-500 h-full w-1/2"></div>
+                </div>
+              </div>
+              <div
+                class="glass-panel p-4 rounded-2xl border flex-grow flex flex-col justify-between"
+              >
+                <div class="flex justify-between items-center mb-2">
+                  <h3
+                    class="text-[9px] font-black text-purple-400 uppercase tracking-widest flex items-center gap-1.5"
+                  >
+                    <i data-lucide="dumbbell" class="w-3 h-3"></i> 1RM Calc
+                  </h3>
+                  <p id="ormResult" class="text-sm font-black text-purple-400">
+                    -
+                  </p>
+                </div>
+                <div class="flex gap-2">
+                  <input
+                    type="number"
+                    id="ormWeight"
+                    class="w-full elite-input rounded-lg px-2 py-1.5 text-xs text-center"
+                    placeholder="KG"
+                  />
+                  <input
+                    type="number"
+                    id="ormReps"
+                    class="w-full elite-input rounded-lg px-2 py-1.5 text-xs text-center"
+                    placeholder="Reps"
+                  />
+                  <button
+                    onclick="calculate1RM()"
+                    class="bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition"
+                  >
+                    <i data-lucide="calculator" class="w-3 h-3"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- History & Leaderboard Area -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div
+              class="lg:col-span-2 glass-panel rounded-2xl overflow-hidden shadow-2xl border border-gray-800 h-fit"
+            >
+              <div class="p-4 border-b border-gray-800 bg-[#020617]/50">
+                <h3
+                  class="text-[9px] font-black text-gray-400 uppercase tracking-widest"
+                >
+                  Riwayat Aktivitas
+                </h3>
+              </div>
+              <div class="overflow-x-auto max-h-[350px]">
+                <table class="w-full text-left text-sm text-gray-300">
+                  <thead
+                    class="bg-[#020617] text-[8px] uppercase text-gray-500 font-black tracking-widest border-b border-gray-800 sticky top-0"
+                  >
+                    <tr>
+                      <th class="px-4 py-3">Tipe</th>
+                      <th class="px-4 py-3">Aktivitas</th>
+                      <th class="px-4 py-3">Detail</th>
+                      <th class="px-4 py-3 text-center">Status</th>
+                      <th class="px-4 py-3 text-center">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody
+                    id="scheduleTable"
+                    class="divide-y divide-gray-800/50"
+                  ></tbody>
+                </table>
+              </div>
+            </div>
+            <div
+              class="glass-panel rounded-2xl border border-gray-800 overflow-hidden h-fit"
+            >
+              <div
+                class="p-4 border-b border-gray-800 bg-gradient-to-r from-yellow-900/20 to-transparent"
+              >
+                <h3
+                  class="text-[9px] font-black text-yellow-500 uppercase tracking-widest flex items-center gap-1.5"
+                >
+                  <i data-lucide="trophy" class="w-3.5 h-3.5"></i> Global
+                  Leaderboard
+                </h3>
+              </div>
+              <div class="p-4 flex flex-col gap-3" id="leaderboardList"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ADMIN DASHBOARD -->
+        <div id="adminDashboard" class="hidden space-y-6">
+          <div
+            class="bg-gradient-to-r from-purple-900/40 to-[#020617] border border-purple-800/50 p-6 rounded-3xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+          >
+            <div>
+              <h2
+                class="text-xl md:text-2xl font-black text-purple-400 tracking-wider flex items-center gap-2"
+              >
+                <i data-lucide="shield-check" class="text-purple-500"></i> PANEL
+                SUPER ADMIN
+              </h2>
+              <p
+                class="text-[10px] text-purple-300 mt-1 uppercase tracking-widest"
+              >
+                Adib Project Core
+              </p>
+            </div>
+            <button
+              onclick="adminExportCSV()"
+              class="w-full md:w-auto bg-purple-600 hover:bg-purple-500 text-white px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition"
+            >
+              <i data-lucide="download" class="w-4 h-4"></i> Ekspor CSV
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div
+              class="lg:col-span-2 glass-panel rounded-2xl overflow-hidden border border-gray-800"
+            >
+              <div class="p-4 border-b border-gray-800 bg-[#020617]/50">
+                <h3
+                  class="text-[9px] font-black text-gray-400 uppercase tracking-widest"
+                >
+                  Direktori Member
+                </h3>
+              </div>
+              <div class="overflow-x-auto max-h-[400px]">
+                <table class="w-full text-left text-sm text-gray-300">
+                  <thead
+                    class="bg-[#020617] text-[9px] uppercase text-gray-500 font-black tracking-widest border-b border-gray-800 sticky top-0"
+                  >
+                    <tr>
+                      <th class="px-4 py-3">ID</th>
+                      <th class="px-4 py-3">Info</th>
+                      <th class="px-4 py-3">EXP</th>
+                      <th class="px-4 py-3">Status</th>
+                      <th class="px-4 py-3 text-center">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody
+                    id="adminMemberTable"
+                    class="divide-y divide-gray-800/50"
+                  ></tbody>
+                </table>
+              </div>
+            </div>
+            <div
+              class="glass-panel p-5 rounded-2xl border border-gray-800 flex flex-col"
+            >
+              <h3
+                class="text-[9px] font-black text-lime-400 uppercase tracking-widest mb-3 flex items-center gap-2"
+              >
+                <i data-lucide="activity" class="w-3.5 h-3.5"></i> Live Activity
+                Logs
+              </h3>
+              <div
+                id="adminLogs"
+                class="flex-grow space-y-2.5 max-h-[250px] overflow-y-auto mb-4 pr-1"
+              ></div>
+              <div class="pt-4 border-t border-gray-800">
+                <label class="elite-label text-blue-400"
+                  >Broadcast Pengumuman</label
+                >
+                <div class="flex gap-2">
+                  <input
+                    type="text"
+                    id="adminBroadcast"
+                    placeholder="Pesan..."
+                    class="flex-1 elite-input rounded-lg px-3 py-2 text-xs"
+                  /><button
+                    onclick="sendBroadcast()"
+                    class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-[10px] font-black text-white uppercase"
+                  >
+                    <i data-lucide="send" class="w-3 h-3"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- LUPA PASSWORD MODAL -->
+    <div
+      id="forgotModal"
+      class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden"
+    >
+      <div
+        class="glass-panel rounded-2xl max-w-sm w-full p-6 border border-gray-700"
+      >
+        <div class="flex justify-between items-center mb-5">
+          <h3 class="font-black text-base text-white uppercase tracking-widest">
+            Lupa Password
+          </h3>
+          <button
+            onclick="closeForgotModal()"
+            class="text-gray-500 hover:text-white"
+          >
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <p class="text-xs text-gray-400 mb-4 leading-relaxed">
+          Masukkan Username Anda. Permintaan reset akan dikirim langsung ke
+          sistem Live Log Admin.
+        </p>
+        <input
+          type="text"
+          id="forgotUser"
+          placeholder="Username Anda"
+          class="w-full elite-input rounded-xl px-4 py-3 text-sm mb-4"
+        />
+        <button
+          onclick="submitForgot()"
+          class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3 rounded-xl uppercase tracking-widest text-[10px] transition"
+        >
+          Kirim Permintaan Reset
+        </button>
+      </div>
+    </div>
+
+    <!-- TAMBAH AKTIVITAS MODAL -->
+    <div
+      id="scheduleModal"
+      class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-[55] hidden"
+    >
+      <div
+        class="glass-panel rounded-2xl max-w-lg w-full p-6 border border-gray-700 max-h-[90vh] overflow-y-auto"
+      >
+        <div class="flex justify-between items-center mb-5">
+          <h3 class="font-black text-lg text-white tracking-widest uppercase">
+            Aktivitas Baru
+          </h3>
+          <button
+            onclick="closeModalTambah()"
+            class="text-gray-500 hover:text-white"
+          >
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <form onsubmit="handleSaveSchedule(event)" class="space-y-4">
+          <div>
+            <label class="elite-label">Pilih Tipe</label>
+            <div class="grid grid-cols-5 gap-1.5 mb-2">
+              <button
+                type="button"
+                onclick="selectType('Gym')"
+                id="btn-type-Gym"
+                class="type-btn py-2 rounded-lg border border-gray-700 text-[9px] font-black uppercase tracking-widest text-gray-400 transition"
+              >
+                Gym
+              </button>
+              <button
+                type="button"
+                onclick="selectType('Lari')"
+                id="btn-type-Lari"
+                class="type-btn py-2 rounded-lg border border-gray-700 text-[9px] font-black uppercase tracking-widest text-gray-400 transition"
+              >
+                Lari
+              </button>
+              <button
+                type="button"
+                onclick="selectType('Sepeda')"
+                id="btn-type-Sepeda"
+                class="type-btn py-2 rounded-lg border border-gray-700 text-[9px] font-black uppercase tracking-widest text-gray-400 transition"
+              >
+                Sepeda
+              </button>
+              <button
+                type="button"
+                onclick="selectType('Renang')"
+                id="btn-type-Renang"
+                class="type-btn py-2 rounded-lg border border-gray-700 text-[9px] font-black uppercase tracking-widest text-gray-400 transition"
+              >
+                Renang
+              </button>
+              <button
+                type="button"
+                onclick="selectType('Joging')"
+                id="btn-type-Joging"
+                class="type-btn py-2 rounded-lg border border-gray-700 text-[9px] font-black uppercase tracking-widest text-gray-400 transition"
+              >
+                Joging
+              </button>
+            </div>
+            <input type="hidden" id="schType" value="Gym" />
+          </div>
+          <div>
+            <label class="elite-label">Intensitas</label>
+            <div class="flex gap-2">
+              <label class="flex-1 cursor-pointer"
+                ><input
+                  type="radio"
+                  name="schInt"
+                  value="Santai"
+                  class="peer sr-only"
+                  checked
+                />
+                <div
+                  class="text-center py-2 rounded-lg border border-gray-700 text-[9px] font-bold text-gray-500 peer-checked:bg-green-900/30 peer-checked:text-green-400 peer-checked:border-green-500 uppercase transition"
+                >
+                  Santai
+                </div></label
+              >
+              <label class="flex-1 cursor-pointer"
+                ><input
+                  type="radio"
+                  name="schInt"
+                  value="Sedang"
+                  class="peer sr-only"
+                />
+                <div
+                  class="text-center py-2 rounded-lg border border-gray-700 text-[9px] font-bold text-gray-500 peer-checked:bg-yellow-900/30 peer-checked:text-yellow-400 peer-checked:border-yellow-500 uppercase transition"
+                >
+                  Sedang
+                </div></label
+              >
+              <label class="flex-1 cursor-pointer"
+                ><input
+                  type="radio"
+                  name="schInt"
+                  value="Ekstrem"
+                  class="peer sr-only"
+                />
+                <div
+                  class="text-center py-2 rounded-lg border border-gray-700 text-[9px] font-bold text-gray-500 peer-checked:bg-red-900/30 peer-checked:text-red-400 peer-checked:border-red-500 uppercase transition"
+                >
+                  Ekstrem
+                </div></label
+              >
+            </div>
+          </div>
+          <div>
+            <label class="elite-label text-lime-400">NAMA / RUTE</label
+            ><input
+              type="text"
+              id="schName"
+              placeholder="Contoh: Lari Pagi di GBK"
+              required
+              class="w-full elite-input rounded-xl px-4 py-3 text-sm"
+            />
+          </div>
+          <div id="fieldsGym" class="grid grid-cols-2 gap-3">
+            <div class="col-span-2 md:col-span-1">
+              <label class="elite-label">Target Otot</label
+              ><input
+                type="text"
+                id="schTarget"
+                placeholder="Dada"
+                class="w-full elite-input rounded-xl px-4 py-2.5 text-sm"
+              />
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="elite-label">Set</label
+                ><input
+                  type="number"
+                  id="schSets"
+                  placeholder="4"
+                  class="w-full elite-input rounded-xl px-4 py-2.5 text-sm"
+                />
+              </div>
+              <div>
+                <label class="elite-label">Reps</label
+                ><input
+                  type="number"
+                  id="schReps"
+                  placeholder="12"
+                  class="w-full elite-input rounded-xl px-4 py-2.5 text-sm"
+                />
+              </div>
+            </div>
+            <div class="col-span-2">
+              <label class="elite-label">Beban / Weight</label
+              ><select
+                id="schWeight"
+                class="w-full elite-input rounded-xl px-4 py-2.5 text-sm"
+              ></select>
+            </div>
+          </div>
+          <div id="fieldsCardio" class="grid grid-cols-2 gap-3 hidden">
+            <div>
+              <label class="elite-label">JARAK (M/KM)</label
+              ><input
+                type="text"
+                id="schDist"
+                placeholder="5 Km"
+                class="w-full elite-input rounded-xl px-4 py-2.5 text-sm"
+              />
+            </div>
+            <div>
+              <label class="elite-label">DURASI (MENIT)</label
+              ><input
+                type="text"
+                id="schDur"
+                placeholder="45"
+                class="w-full elite-input rounded-xl px-4 py-2.5 text-sm"
+              />
+            </div>
+          </div>
+          <button
+            type="submit"
+            class="w-full bg-lime-500 hover:bg-lime-400 text-gray-950 font-black py-3.5 rounded-xl uppercase tracking-widest text-[10px] shadow-[0_0_15px_rgba(132,204,22,0.3)] transition mt-2"
+          >
+            Simpan Jadwal
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- FOOD & BMI MODALS -->
+    <div
+      id="foodModal"
+      class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden"
+    >
+      <div
+        class="glass-panel rounded-2xl max-w-sm w-full p-6 border border-gray-700"
+      >
+        <div class="flex justify-between items-center mb-5">
+          <h3 class="font-black text-base text-white uppercase tracking-widest">
+            Catat Makanan
+          </h3>
+          <button onclick="closeFoodModal()" class="text-gray-500">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <form onsubmit="saveFood(event)" class="space-y-4">
+          <div>
+            <label class="elite-label">Nama Makanan</label
+            ><input
+              type="text"
+              id="foodName"
+              required
+              placeholder="Nasi Goreng"
+              class="w-full elite-input rounded-xl px-4 py-2.5 text-sm"
+            />
+          </div>
+          <div>
+            <label class="elite-label">Kalori (Kcal)</label
+            ><input
+              type="number"
+              id="foodCal"
+              required
+              placeholder="350"
+              class="w-full elite-input rounded-xl px-4 py-2.5 text-sm"
+            />
+          </div>
+          <button
+            type="submit"
+            class="w-full bg-orange-600 hover:bg-orange-500 text-white font-black py-3 rounded-xl uppercase tracking-widest text-[10px]"
+          >
+            Simpan
+          </button>
+        </form>
+      </div>
+    </div>
+    <div
+      id="profileModal"
+      class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden"
+    >
+      <div
+        class="glass-panel rounded-2xl max-w-sm w-full p-6 border border-gray-700"
+      >
+        <div class="flex justify-between items-center mb-5">
+          <h3 class="font-black text-base text-white uppercase tracking-widest">
+            Update Fisik
+          </h3>
+          <button
+            onclick="
+              document.getElementById('profileModal').classList.add('hidden')
+            "
+            class="text-gray-500"
+          >
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label class="elite-label">Berat (KG)</label
+            ><input
+              type="number"
+              id="inpWeight"
+              class="w-full elite-input rounded-xl px-4 py-3 text-center text-lg font-bold"
+            />
+          </div>
+          <div>
+            <label class="elite-label">Tinggi (CM)</label
+            ><input
+              type="number"
+              id="inpHeight"
+              class="w-full elite-input rounded-xl px-4 py-3 text-center text-lg font-bold"
+            />
+          </div>
+          <button
+            onclick="saveProfile()"
+            class="w-full bg-rose-600 hover:bg-rose-500 text-white font-black py-3 rounded-xl uppercase tracking-widest text-[10px]"
+          >
+            Simpan
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- REST TIMER (GYM) -->
+    <div
+      id="restTimerModal"
+      class="fixed inset-0 bg-black/95 backdrop-blur-2xl flex items-center justify-center z-[60] hidden"
+    >
+      <div class="text-center w-full max-w-xs px-4">
+        <h3
+          class="text-lime-400 font-bold uppercase tracking-widest mb-6 text-sm"
+        >
+          WAKTU ISTIRAHAT
+        </h3>
+        <div
+          class="relative w-40 h-40 md:w-48 md:h-48 mx-auto flex items-center justify-center bg-[#020617] rounded-full shadow-[0_0_40px_rgba(132,204,22,0.2)] border-4 border-gray-800"
+        >
+          <span
+            id="restSecs"
+            class="text-5xl md:text-6xl font-black text-white font-mono"
+            >60</span
+          >
+        </div>
+        <p class="text-gray-400 text-xs mt-6 mb-8 uppercase tracking-widest">
+          Tarik napas, siapkan tenaga.
+        </p>
+        <button
+          onclick="skipRest()"
+          class="w-full bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-full uppercase text-[10px] font-black tracking-widest border border-gray-600 transition"
+        >
+          Skip Istirahat
+        </button>
+      </div>
+    </div>
+
+    <!-- LIVE TRACKER MODAL -->
+    <div
+      id="trackerModal"
+      class="fixed inset-0 bg-[#030712] flex flex-col z-50 hidden"
+    >
+      <div
+        class="p-4 flex justify-between items-center bg-[#020617] border-b border-gray-800 shadow-2xl relative z-20"
+      >
+        <div>
+          <h3
+            class="font-black text-sm md:text-lg text-white uppercase tracking-widest"
+          >
+            LIVE TRACKER
+          </h3>
+          <p
+            class="text-[8px] text-lime-400 font-bold uppercase tracking-widest mt-0.5"
+            id="gpsStatus"
+          >
+            Satelit & AI Aktif...
+          </p>
+        </div>
+        <div class="flex items-center gap-2 md:gap-4">
+          <div
+            class="flex items-center gap-1.5 bg-red-950/40 px-2 md:px-3 py-1.5 rounded-xl border border-red-900/50"
+          >
+            <i
+              data-lucide="heart"
+              class="w-3 h-3 md:w-4 md:h-4 text-red-500 animate-pulse-heart"
+            ></i
+            ><span
+              id="trackerBPM"
+              class="text-sm md:text-lg font-black text-white"
+              >85</span
+            ><span
+              class="text-[8px] text-red-400 font-bold uppercase hidden md:inline"
+              >BPM</span
+            >
+          </div>
+          <div
+            class="text-lg md:text-xl font-black text-white tracking-widest font-mono"
+            id="trackerTimer"
+          >
+            00:00
+          </div>
+        </div>
+      </div>
+      <div class="flex-grow relative z-10 w-full h-full">
+        <div id="map" class="absolute inset-0"></div>
+      </div>
+      <div
+        class="p-4 bg-[#020617] border-t border-gray-800 flex justify-center relative z-20"
+      >
+        <button
+          onclick="stopTracker()"
+          class="bg-red-600 hover:bg-red-500 text-white font-black w-full md:w-auto px-8 py-3.5 rounded-xl uppercase tracking-widest text-[10px] flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(220,38,38,0.5)] transition"
+        >
+          <i data-lucide="square" class="w-3.5 h-3.5"></i> Selesaikan Latihan
+        </button>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer
+      class="border-t border-gray-800 py-6 text-center text-[8px] text-gray-600 uppercase font-black tracking-widest mt-4"
+    >
+      <p>&copy; 2026 Gym Bro Ultimate. Adib Project.</p>
+    </footer>
+
+    <script>
+      // --- 1. PWA INJECTION ---
+      const manifestStr = JSON.stringify({
+        name: "Gym Bro - Adib Project",
+        short_name: "GymBro",
+        start_url: ".",
+        display: "standalone",
+        background_color: "#030712",
+        theme_color: "#84cc16",
+        icons: [
+          {
+            src: "https://cdn-icons-png.flaticon.com/512/2964/2964514.png",
+            sizes: "512x512",
+            type: "image/png",
+          },
+        ],
+      });
+      const manifestUrl = URL.createObjectURL(
+        new Blob([manifestStr], { type: "application/json" }),
+      );
+      document.getElementById("pwa-manifest").setAttribute("href", manifestUrl);
+
+      const swStr = `self.addEventListener('install', e => self.skipWaiting()); self.addEventListener('activate', e => e.waitUntil(clients.claim())); self.addEventListener('fetch', e => {});`;
+      const swUrl = URL.createObjectURL(
+        new Blob([swStr], { type: "application/javascript" }),
+      );
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .register(swUrl)
+          .catch((err) =>
+            console.log(
+              "SW PWA (Blob) blocked due to local file security. Use localhost or https.",
+            ),
+          );
+      }
+
+      let deferredPrompt;
+      window.addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById("btnInstallApp").classList.remove("hidden");
+      });
+      document
+        .getElementById("btnInstallApp")
+        .addEventListener("click", async () => {
+          if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            document.getElementById("btnInstallApp").classList.add("hidden");
+          }
+        });
+
+      // --- 2. VOICE AI (Speech Synthesis) ---
+      function playVoice(text) {
+        if ("speechSynthesis" in window) {
+          const u = new SpeechSynthesisUtterance(text);
+          u.lang = "id-ID";
+          u.rate = 1.0;
+          u.pitch = 1.0;
+          window.speechSynthesis.speak(u);
+        }
+      }
+
+      // --- 3. APP LOGIC & STATE ---
+      let currentUser = null;
+      let users = JSON.parse(localStorage.getItem("gymPWAUsers")) || [];
+      let schedules = JSON.parse(localStorage.getItem("gymPWASchedules")) || [];
+      let settings = JSON.parse(localStorage.getItem("gymPWASettings")) || {
+        broadcast: "",
+      };
+      let sysLogs = JSON.parse(localStorage.getItem("gymPWALogs")) || [];
+
+      if (!users.find((u) => u.username === "adib")) {
+        users.push({
+          username: "adib",
+          name: "Adib (Super Owner)",
+          pass: "adibpass123",
+          role: "owner",
+          status: "active",
+          exp: 0,
+          water: 0,
+          foodLog: [],
+        });
+        localStorage.setItem("gymPWAUsers", JSON.stringify(users));
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        renderNav();
+        checkAuth();
+        updateBroadcastUI();
+        selectType("Gym");
+        initWeightDropdown();
+        if (window.lucide) lucide.createIcons();
+      });
+
+      function initWeightDropdown() {
+        const wSel = document.getElementById("schWeight");
+        wSel.innerHTML =
+          '<option value="Bodyweight">Bodyweight (0 Kg)</option>';
+        for (let i = 2.5; i <= 100; i += 2.5) {
+          wSel.innerHTML += `<option value="${i} Kg">${i} Kg</option>`;
+        }
+      }
+
+      function addLog(msg) {
+        let timeStr = new Date().toTimeString().substring(0, 5);
+        sysLogs.unshift({ time: timeStr, text: msg });
+        if (sysLogs.length > 50) sysLogs.pop();
+        localStorage.setItem("gymPWALogs", JSON.stringify(sysLogs));
+        if (currentUser && currentUser.role === "owner") renderAdminLogs();
+      }
+
+      function updateUserData() {
+        let idx = users.findIndex((u) => u.username === currentUser.username);
+        if (idx > -1) users[idx] = currentUser;
+        localStorage.setItem("gymPWAUsers", JSON.stringify(users));
+        localStorage.setItem("gymPWACur", JSON.stringify(currentUser));
+      }
+
+      function renderNav() {
+        const navRight = document.getElementById("navRight");
+        if (currentUser) {
+          let isOwner = currentUser.role === "owner";
+          navRight.innerHTML = `<span class="text-[9px] px-2 py-1 rounded bg-gray-800 text-lime-400 border border-gray-700 uppercase font-black">${isOwner ? "OWNER" : "MEMBER"}</span><span class="text-xs font-bold text-white hidden md:block">${currentUser.name}</span><button onclick="handleLogout()" class="text-gray-500 hover:text-red-400"><i data-lucide="log-out" class="w-4 h-4"></i></button>`;
+        } else {
+          navRight.innerHTML = `<span class="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Silakan Masuk</span>`;
+        }
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function switchTab(t) {
+        document
+          .getElementById("loginForm")
+          .classList.toggle("hidden", t !== "login");
+        document
+          .getElementById("registerForm")
+          .classList.toggle("hidden", t === "login");
+        document.getElementById("tabLogin").className =
+          t === "login"
+            ? "flex-1 pb-3 font-bold border-b-2 border-lime-500 text-lime-400 transition"
+            : "flex-1 pb-3 font-bold border-b-2 border-transparent text-gray-500 hover:text-white transition";
+        document.getElementById("tabRegister").className =
+          t === "register"
+            ? "flex-1 pb-3 font-bold border-b-2 border-lime-500 text-lime-400 transition"
+            : "flex-1 pb-3 font-bold border-b-2 border-transparent text-gray-500 hover:text-white transition";
+      }
+
+      function handleLogin(e) {
+        e.preventDefault();
+        const u = document.getElementById("loginUser").value.trim();
+        const p = document.getElementById("loginPass").value.trim();
+        const user = users.find((x) => x.username === u && x.pass === p);
+        if (!user) return alert("Username/Password salah!");
+        if (user.status === "hidden")
+          return alert("Akun disembunyikan. Hubungi Admin Adib.");
+
+        currentUser = {
+          ...user,
+          exp: user.exp || 0,
+          water: user.water || 0,
+          foodLog: user.foodLog || [],
+        };
+        localStorage.setItem("gymPWACur", JSON.stringify(currentUser));
+        document.getElementById("loginUser").value = "";
+        document.getElementById("loginPass").value = "";
+        addLog(`@${currentUser.username} masuk (Login)`);
+        renderNav();
+        checkAuth();
+      }
+
+      function handleRegister(e) {
+        e.preventDefault();
+        const n = document.getElementById("regName").value.trim();
+        const u = document.getElementById("regUser").value.trim();
+        const p = document.getElementById("regPass").value.trim();
+        if (users.find((x) => x.username === u))
+          return alert("Username sudah dipakai!");
+        users.push({
+          id: Date.now(),
+          name: n,
+          username: u,
+          pass: p,
+          role: "member",
+          status: "active",
+          exp: 0,
+          water: 0,
+          weight: 0,
+          height: 0,
+          foodLog: [],
+        });
+        localStorage.setItem("gymPWAUsers", JSON.stringify(users));
+        addLog(`Member baru: ${n} (@${u})`);
+        alert("Pendaftaran berhasil!");
+        switchTab("login");
+        document.getElementById("registerForm").reset();
+      }
+
+      function openForgotModal() {
+        document.getElementById("forgotModal").classList.remove("hidden");
+      }
+      function closeForgotModal() {
+        document.getElementById("forgotModal").classList.add("hidden");
+        document.getElementById("forgotUser").value = "";
+      }
+      function submitForgot() {
+        let u = document.getElementById("forgotUser").value.trim();
+        if (!u) return alert("Masukkan username.");
+        let ex = users.find((x) => x.username === u);
+        if (ex) {
+          addLog(`[DARURAT] @${u} meminta reset password!`);
+          alert(
+            "Permintaan reset terkirim ke sistem Live Log Admin. Silakan hubungi Owner Adib.",
+          );
+        } else {
+          alert("Username tidak ditemukan.");
+        }
+        closeForgotModal();
+      }
+
+      function handleLogout() {
+        addLog(`@${currentUser.username} keluar`);
+        currentUser = null;
+        localStorage.removeItem("gymPWACur");
+        renderNav();
+        checkAuth();
+      }
+
+      function checkAuth() {
+        if (!currentUser) {
+          document.getElementById("authSection").classList.remove("hidden");
+          document.getElementById("dashboardSection").classList.add("hidden");
+        } else {
+          document.getElementById("authSection").classList.add("hidden");
+          document
+            .getElementById("dashboardSection")
+            .classList.remove("hidden");
+          if (currentUser.role === "owner") {
+            document.getElementById("memberDashboard").classList.add("hidden");
+            document
+              .getElementById("adminDashboard")
+              .classList.remove("hidden");
+            renderAdmin();
+          } else {
+            document
+              .getElementById("memberDashboard")
+              .classList.remove("hidden");
+            document.getElementById("adminDashboard").classList.add("hidden");
+            renderMember();
+            renderLeaderboard();
+          }
+        }
+      }
+
+      function selectType(t) {
+        document.getElementById("schType").value = t;
+        document.querySelectorAll(".type-btn").forEach((b) => {
+          b.classList.remove(
+            "bg-lime-500/20",
+            "text-lime-400",
+            "border-lime-500",
+          );
+          b.classList.add("text-gray-400", "border-gray-700");
+        });
+        const act = document.getElementById("btn-type-" + t);
+        act.classList.remove("text-gray-400", "border-gray-700");
+        act.classList.add("bg-lime-500/20", "text-lime-400", "border-lime-500");
+        document
+          .getElementById("fieldsGym")
+          .classList.toggle("hidden", t !== "Gym");
+        document
+          .getElementById("fieldsCardio")
+          .classList.toggle("hidden", t === "Gym");
+      }
+
+      function openModalTambah() {
+        document.getElementById("scheduleModal").classList.remove("hidden");
+      }
+      function closeModalTambah() {
+        document.getElementById("scheduleModal").classList.add("hidden");
+      }
+      function addWater(a) {
+        currentUser.water += a;
+        if (currentUser.water < 0) currentUser.water = 0;
+        updateUserData();
+        renderMember();
+      }
+      function openProfileModal() {
+        document.getElementById("inpWeight").value = currentUser.weight || "";
+        document.getElementById("inpHeight").value = currentUser.height || "";
+        document.getElementById("profileModal").classList.remove("hidden");
+      }
+      function saveProfile() {
+        currentUser.weight =
+          parseFloat(document.getElementById("inpWeight").value) || 0;
+        currentUser.height =
+          parseFloat(document.getElementById("inpHeight").value) || 0;
+        updateUserData();
+        document.getElementById("profileModal").classList.add("hidden");
+        renderMember();
+      }
+      function openFoodModal() {
+        document.getElementById("foodModal").classList.remove("hidden");
+      }
+      function closeFoodModal() {
+        document.getElementById("foodModal").classList.add("hidden");
+      }
+      function saveFood(e) {
+        e.preventDefault();
+        let n = document.getElementById("foodName").value;
+        let c = parseInt(document.getElementById("foodCal").value);
+        currentUser.foodLog.push({ id: Date.now(), name: n, cal: c });
+        updateUserData();
+        closeFoodModal();
+        renderMember();
+        e.target.reset();
+      }
+      function calculate1RM() {
+        let w = parseFloat(document.getElementById("ormWeight").value);
+        let r = parseInt(document.getElementById("ormReps").value);
+        if (w > 0 && r > 0) {
+          document.getElementById("ormResult").innerText =
+            (w * (1 + r / 30)).toFixed(1) + " KG";
+        } else {
+          alert("Isi dengan benar!");
+        }
+      }
+
+      function giveExp(amount) {
+        let oldLvl = Math.floor(currentUser.exp / 500) + 1;
+        currentUser.exp += amount;
+        let newLvl = Math.floor(currentUser.exp / 500) + 1;
+        updateUserData();
+        if (newLvl > oldLvl) {
+          playVoice(`Selamat! Kamu naik ke level ${newLvl}. Mantap bro!`);
+          alert(`💪 LEVEL UP KE ${newLvl}!`);
+        }
+      }
+
+      function renderMember() {
+        document.getElementById("userGreeting").innerText =
+          `Halo, ${currentUser.name}!`;
+        let exp = currentUser.exp || 0;
+        let level = Math.floor(exp / 500) + 1;
+        let cExp = exp % 500;
+        document.getElementById("userLevelText").innerText = level;
+        document.getElementById("expText").innerText = `${cExp}/500 EXP`;
+        document.getElementById("expBar").style.width =
+          `${(cExp / 500) * 100}%`;
+
+        let my = schedules.filter((s) => s.user === currentUser.username);
+        let cals = 0,
+          dist = 0,
+          comp = 0;
+        let rows = my
+          .map((s) => {
+            if (s.status === "completed") {
+              comp++;
+              cals += s.resCal;
+              dist += s.resDist;
+            }
+            let cBadge =
+              s.type === "Gym"
+                ? "purple"
+                : s.type === "Renang"
+                  ? "cyan"
+                  : s.type === "Sepeda"
+                    ? "orange"
+                    : "green";
+            let act =
+              s.status === "completed"
+                ? `<button class="text-gray-500 hover:text-red-500" onclick="delSch(${s.id})"><i data-lucide="trash" class="w-3.5 h-3.5"></i></button>`
+                : `<button class="bg-blue-600/80 text-white px-2.5 py-1.5 rounded-lg text-[8px] font-black uppercase hover:bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)] transition" onclick="${s.type === "Gym" ? `finishGym(${s.id})` : `startLive(${s.id})`}">${s.type === "Gym" ? "Selesai Set" : "Live Track"}</button>`;
+            let det =
+              s.type === "Gym"
+                ? `${s.targetOtot || "-"} (Set: ${s.sets || "-"}x${s.reps || "-"} - ${s.weight || "BW"})`
+                : `${s.dist || "-"} / ${s.dur || "-"}`;
+            return `<tr class="border-b border-gray-800/50 hover:bg-[#0f172a]/50 transition"><td class="px-3 py-3"><span class="text-${cBadge}-400 border border-${cBadge}-500/30 bg-${cBadge}-900/20 px-1.5 py-0.5 rounded text-[8px] uppercase font-black">${s.type}</span></td><td class="px-3 py-3 font-bold text-white text-[11px]">${s.name}</td><td class="px-3 py-3 text-gray-400 text-[9px]">${det}</td><td class="px-3 py-3 text-center"><span class="text-[8px] font-bold uppercase ${s.status === "completed" ? "text-green-500" : "text-yellow-500"}">${s.status}</span></td><td class="px-3 py-3 text-center">${act}</td></tr>`;
+          })
+          .join("");
+        document.getElementById("scheduleTable").innerHTML =
+          rows ||
+          `<tr><td colspan="5" class="text-center py-5 text-gray-600 font-bold text-[9px] uppercase tracking-widest">Belum Ada Jadwal</td></tr>`;
+
+        document.getElementById("statTotal").innerText = my.length;
+        document.getElementById("statCompleted").innerText = comp;
+        document.getElementById("statCals").innerText = cals;
+        document.getElementById("statDist").innerText = dist.toFixed(1);
+        document.getElementById("statWater").innerText = currentUser.water || 0;
+        document.getElementById("txtWeight").innerText =
+          currentUser.weight || "-";
+        document.getElementById("txtHeight").innerText =
+          currentUser.height || "-";
+
+        let fIn = currentUser.foodLog.reduce((a, b) => a + b.cal, 0);
+        document.getElementById("txtFoodIn").innerText = fIn;
+        document.getElementById("txtFoodOut").innerText = cals;
+        let tot = fIn + cals;
+        document.getElementById("barFoodIn").style.width =
+          tot === 0 ? "50%" : `${(fIn / tot) * 100}%`;
+        document.getElementById("barFoodOut").style.width =
+          tot === 0 ? "50%" : `${(cals / tot) * 100}%`;
+
+        let bStat = "-",
+          bCol = "text-gray-400";
+        if (currentUser.weight > 0 && currentUser.height > 0) {
+          let hm = currentUser.height / 100;
+          let b = currentUser.weight / (hm * hm);
+          if (b < 18.5) {
+            bStat = "KURUS";
+            bCol = "text-yellow-400";
+          } else if (b < 24.9) {
+            bStat = "IDEAL";
+            bCol = "text-green-400";
+          } else if (b < 29.9) {
+            bStat = "OVER";
+            bCol = "text-orange-400";
+          } else {
+            bStat = "OBESITAS";
+            bCol = "text-red-500";
+          }
+        }
+        document.getElementById("txtBMIStatus").innerText = bStat;
+        document.getElementById("txtBMIStatus").className =
+          `text-xs md:text-sm font-black ${bCol}`;
+
+        let bHtml = "";
+        if (comp >= 1)
+          bHtml += `<div title="First Blood" class="bg-gray-800 p-1.5 rounded-md border border-lime-500/50 badge-icon"><i data-lucide="zap" class="w-3.5 h-3.5 text-lime-400"></i></div>`;
+        if (comp >= 5)
+          bHtml += `<div title="Consistent" class="bg-gray-800 p-1.5 rounded-md border border-orange-500/50 badge-icon"><i data-lucide="flame" class="w-3.5 h-3.5 text-orange-400"></i></div>`;
+        if ((currentUser.water || 0) >= 8)
+          bHtml += `<div title="Hydrated" class="bg-gray-800 p-1.5 rounded-md border border-blue-500/50 badge-icon"><i data-lucide="droplet" class="w-3.5 h-3.5 text-blue-400"></i></div>`;
+        if (level >= 3)
+          bHtml += `<div title="Elite" class="bg-gray-800 p-1.5 rounded-md border border-yellow-500/50 badge-icon"><i data-lucide="crown" class="w-3.5 h-3.5 text-yellow-400"></i></div>`;
+        document.getElementById("badgesContainer").innerHTML =
+          bHtml ||
+          `<span class="text-[9px] text-gray-600">Belum ada badge</span>`;
+
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function handleSaveSchedule(e) {
+        e.preventDefault();
+        let newSch = {
+          id: Date.now(),
+          user: currentUser.username,
+          type: document.getElementById("schType").value,
+          intensity: document.querySelector('input[name="schInt"]:checked')
+            .value,
+          name: document.getElementById("schName").value,
+          targetOtot: document.getElementById("schTarget").value,
+          sets: document.getElementById("schSets").value,
+          reps: document.getElementById("schReps").value,
+          weight: document.getElementById("schWeight").value,
+          dist: document.getElementById("schDist").value,
+          dur: document.getElementById("schDur").value,
+          status: "pending",
+          resCal: 0,
+          resBpm: 0,
+          resDist: 0,
+        };
+        schedules.unshift(newSch);
+        localStorage.setItem("gymPWASchedules", JSON.stringify(schedules));
+        addLog(`@${currentUser.username} jadwal: ${newSch.name}`);
+        closeModalTambah();
+        renderMember();
+        e.target.reset();
+        selectType("Gym");
+      }
+
+      let restInt;
+      function finishGym(id) {
+        let s = schedules.find((x) => x.id === id);
+        if (s) {
+          s.status = "completed";
+          let c =
+            s.intensity === "Ekstrem"
+              ? 300
+              : s.intensity === "Sedang"
+                ? 200
+                : 100;
+          s.resCal = c;
+          s.resBpm = 110;
+          giveExp(c);
+          addLog(`@${currentUser.username} selesai Gym: ${s.name}`);
+          playVoice("Set selesai. Kerja bagus. Silakan istirahat.");
+        }
+        localStorage.setItem("gymPWASchedules", JSON.stringify(schedules));
+        renderMember();
+        renderLeaderboard();
+        startRestTimer();
+      }
+      function startRestTimer() {
+        document.getElementById("restTimerModal").classList.remove("hidden");
+        let t = 60;
+        document.getElementById("restSecs").innerText = t;
+        restInt = setInterval(() => {
+          t--;
+          document.getElementById("restSecs").innerText = t;
+          if (t <= 0) {
+            skipRest();
+            playVoice("Waktu istirahat selesai. Ayo lanjut angkat beban!");
+          }
+        }, 1000);
+      }
+      function skipRest() {
+        clearInterval(restInt);
+        document.getElementById("restTimerModal").classList.add("hidden");
+      }
+      function delSch(id) {
+        if (confirm("Hapus aktivitas ini?")) {
+          schedules = schedules.filter((x) => x.id !== id);
+          localStorage.setItem("gymPWASchedules", JSON.stringify(schedules));
+          renderMember();
+          renderLeaderboard();
+        }
+      }
+
+      let trackInt,
+        curTrackId,
+        sec = 0,
+        bpm = 80,
+        map,
+        marker;
+      function startLive(id) {
+        curTrackId = id;
+        sec = 0;
+        bpm = 75;
+        playVoice("Satelit terkunci. Sesi kardio dimulai. Semangat bro!");
+        document.getElementById("trackerModal").classList.remove("hidden");
+        document.getElementById("trackerTimer").innerText = "00:00";
+        document.getElementById("trackerBPM").innerText = bpm;
+        document.getElementById("gpsStatus").innerText = "Menghubungkan GPS...";
+
+        setTimeout(() => {
+          if (!map) {
+            map = L.map("map", { zoomControl: false }).setView(
+              [-6.2, 106.8],
+              15,
+            );
+            L.tileLayer(
+              "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+            ).addTo(map);
+            marker = L.circleMarker([-6.2, 106.8], {
+              color: "#84cc16",
+              radius: 7,
+              fillOpacity: 1,
+            }).addTo(map);
+          }
+          map.invalidateSize();
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (pos) => {
+                map.setView([pos.coords.latitude, pos.coords.longitude], 16);
+                marker.setLatLng([pos.coords.latitude, pos.coords.longitude]);
+                document.getElementById("gpsStatus").innerText =
+                  "Live GPS Aktif!";
+              },
+              (err) => {
+                document.getElementById("gpsStatus").innerText =
+                  "GPS Ditolak/Error. Mode Offline.";
+              },
+              { enableHighAccuracy: true, timeout: 5000 },
+            );
+          } else {
+            document.getElementById("gpsStatus").innerText = "Browser no GPS.";
+          }
+        }, 400);
+
+        trackInt = setInterval(() => {
+          sec++;
+          document.getElementById("trackerTimer").innerText = `${Math.floor(
+            sec / 60,
+          )
+            .toString()
+            .padStart(2, "0")}:${(sec % 60).toString().padStart(2, "0")}`;
+          if (sec % 3 === 0) {
+            let s = schedules.find((x) => x.id === curTrackId);
+            let m =
+              s.intensity === "Ekstrem"
+                ? 170
+                : s.intensity === "Sedang"
+                  ? 140
+                  : 115;
+            if (bpm < m) bpm += Math.floor(Math.random() * 3);
+            else bpm += Math.random() > 0.5 ? 1 : -2;
+            document.getElementById("trackerBPM").innerText = bpm;
+          }
+        }, 1000);
+      }
+      function stopTracker() {
+        clearInterval(trackInt);
+        document.getElementById("trackerModal").classList.add("hidden");
+        playVoice("Sesi kardio dihentikan. Data tersimpan.");
+        let s = schedules.find((x) => x.id === curTrackId);
+        if (s) {
+          s.status = "completed";
+          let min = sec / 60 || 1;
+          let cal = Math.floor(min * (bpm * 0.15));
+          s.resCal = cal;
+          s.resDist = parseFloat((min * 0.15).toFixed(2));
+          s.resBpm = bpm;
+          giveExp(cal);
+          addLog(`@${currentUser.username} Kardio: ${s.name} (${cal}kcal)`);
+        }
+        localStorage.setItem("gymPWASchedules", JSON.stringify(schedules));
+        renderMember();
+        renderLeaderboard();
+      }
+
+      function renderLeaderboard() {
+        let uc = {};
+        schedules.forEach((s) => {
+          if (s.status === "completed") {
+            if (!uc[s.user]) uc[s.user] = { cals: 0, lvl: 1, name: "" };
+            uc[s.user].cals += s.resCal;
+          }
+        });
+        users.forEach((u) => {
+          if (uc[u.username]) {
+            uc[u.username].name = u.name;
+            uc[u.username].lvl = Math.floor(u.exp / 500) + 1;
+          }
+        });
+        let sorted = Object.values(uc)
+          .sort((a, b) => b.cals - a.cals)
+          .slice(0, 3);
+        let colors = ["text-yellow-400", "text-gray-300", "text-orange-500"];
+        document.getElementById("leaderboardList").innerHTML =
+          sorted
+            .map(
+              (u, i) =>
+                `<div class="flex items-center justify-between bg-[#020617] p-2.5 rounded-xl border border-gray-800"><div class="flex items-center gap-2.5"><span class="font-black text-sm md:text-base ${colors[i] || "text-white"}">#${i + 1}</span><div><p class="text-[9px] font-bold text-gray-200 uppercase">${u.name}</p><p class="text-[7px] text-lime-400 font-bold uppercase">LVL ${u.lvl}</p></div></div><span class="text-orange-400 font-bold text-[9px]"><i data-lucide="flame" class="w-2.5 h-2.5 inline"></i> ${u.cals} Kcal</span></div>`,
+            )
+            .join("") ||
+          '<p class="text-[9px] text-gray-500 text-center">Belum ada skor.</p>';
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function renderAdminLogs() {
+        document.getElementById("adminLogs").innerHTML =
+          sysLogs
+            .map(
+              (l) =>
+                `<div class="text-[9px] bg-[#020617] p-2 border border-gray-800 rounded"><span class="text-gray-500">[${l.time}]</span> <span class="text-gray-300">${l.text}</span></div>`,
+            )
+            .join("") ||
+          '<p class="text-[9px] text-gray-600">Belum ada log.</p>';
+      }
+      function renderAdmin() {
+        let rows = users
+          .filter((u) => u.username !== "adib")
+          .map(
+            (u) =>
+              `<tr class="border-b border-gray-800/50 hover:bg-[#0f172a]/50"><td class="px-3 py-3 text-[9px] font-mono text-gray-500">#${u.id}</td><td class="px-3 py-3"><p class="text-white font-bold text-[10px]">${u.name} <span class="text-[8px] text-lime-400 font-mono">@${u.username}</span></p></td><td class="px-3 py-3 text-[10px] font-bold text-orange-400">${u.exp} EXP</td><td class="px-3 py-3"><span class="text-[8px] uppercase font-black ${u.status === "hidden" ? "text-red-500" : "text-green-500"}">${u.status}</span></td><td class="px-3 py-3 text-center space-x-1"><button onclick="toggleInvis('${u.username}')" class="text-yellow-400 bg-yellow-900/20 px-2 py-1.5 rounded text-[8px] border border-yellow-500/30 font-black uppercase"><i data-lucide="eye" class="w-3 h-3"></i></button><button onclick="resetPass('${u.username}')" class="text-red-400 bg-red-900/20 px-2 py-1.5 rounded text-[8px] border border-red-500/30 font-black uppercase"><i data-lucide="key" class="w-3 h-3"></i></button></td></tr>`,
+          )
+          .join("");
+        document.getElementById("adminMemberTable").innerHTML =
+          rows ||
+          `<tr><td colspan="5" class="text-center py-5 text-gray-600 font-bold text-[9px] uppercase tracking-widest">Kosong</td></tr>`;
+        renderAdminLogs();
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function toggleInvis(u) {
+        let usr = users.find((x) => x.username === u);
+        if (usr) usr.status = usr.status === "hidden" ? "active" : "hidden";
+        localStorage.setItem("gymPWAUsers", JSON.stringify(users));
+        renderAdmin();
+        addLog(`Status @${u} diubah ke ${usr.status}`);
+      }
+      function resetPass(u) {
+        if (confirm("Reset sandi jadi 123456?")) {
+          users.find((x) => x.username === u).pass = "123456";
+          localStorage.setItem("gymPWAUsers", JSON.stringify(users));
+          addLog(`Sandi @${u} direset Admin`);
+          alert("Sandi direset!");
+        }
+      }
+      function sendBroadcast() {
+        settings.broadcast = document.getElementById("adminBroadcast").value;
+        localStorage.setItem("gymPWASettings", JSON.stringify(settings));
+        addLog(`Broadcast dikirim`);
+        alert("Terkirim!");
+        document.getElementById("adminBroadcast").value = "";
+      }
+      function updateBroadcastUI() {
+        if (
+          settings.broadcast &&
+          (!currentUser || currentUser.role !== "owner")
+        ) {
+          document.getElementById("broadcastBanner").classList.remove("hidden");
+          document.getElementById("broadcastMsg").innerText =
+            settings.broadcast;
+        }
+      }
+      function adminExportCSV() {
+        let csv = "ID,User,Tipe,Nama,Status,Kalori,BPM,Jarak\n";
+        schedules.forEach((s) => {
+          csv += `${s.id},${s.user},${s.type},${s.name},${s.status},${s.resCal || 0},${s.resBpm || 0},${s.resDist || 0}\n`;
+        });
+        const a = document.createElement("a");
+        a.href = window.URL.createObjectURL(
+          new Blob([csv], { type: "text/csv" }),
+        );
+        a.download = "Laporan_Adib.csv";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        addLog(`Admin ekspor CSV`);
+      }
+    </script>
+  </body>
+</html>
